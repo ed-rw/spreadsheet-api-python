@@ -1,23 +1,41 @@
+import uuid
 
+from fastapi import Depends, Response, status
+
+from backends.abstracts import QueryFactory, CommandFactory
+import config
+from v1 import models
+from v1.endpoints import utils
 
 class SpreadsheetsEndpoint:
 
     uri = '/v1/spreadsheets'
 
     @staticmethod
-    async def get():
+    async def get(settings: config.Settings = Depends(config.get_settings),
+                  query_factory: QueryFactory = Depends(utils.get_query_factory)):
         """Return available spreadsheets"""
-        return {"spreadsheets": ['a', 'b', 'c']}
+
+        get_spreadsheets_query =  query_factory.build('RetrieveSpreadsheets',
+                                                      settings)
+        spreadsheets = get_spreadsheets_query.retrieve_data()
+
+        return spreadsheets
 
     @staticmethod
-    async def post():
+    async def post(new_spreadsheet: models.NewSpreadsheet, response: Response,
+                   settings: config.Settings = Depends(config.get_settings),
+                   command_factory: CommandFactory = Depends(utils.get_command_factory)):
         """Create a new spreadsheet"""
-        # create new id
-        id = "some_guid"
 
-        # create spreadsheet using new id
+        id = uuid.uuid4()
+        create_spreadsheet_cmd = command_factory.build('CreateSpreadsheet',
+                settings, id, new_spreadsheet.name
+            )
+        create_spreadsheet_cmd.execute()
 
-        return {"id": id}, 201
+        response.status_code = status.HTTP_201_CREATED
+        return {"id": id}
 
 class SpreadsheetEndpoint:
 
