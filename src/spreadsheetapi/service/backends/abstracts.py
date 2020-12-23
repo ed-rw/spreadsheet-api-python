@@ -1,7 +1,7 @@
-
 from abc import ABC, abstractmethod
 
 import config
+
 
 class Command(ABC):
     pass
@@ -16,7 +16,6 @@ class UnsupportedOperationForBackend(NotImplementedError):
 
 
 class CreateSpreadsheet(Command, ABC):
-
     def __init__(self, settings: config.Settings, id: str, name: str):
         self.settings = settings
         self.id = id

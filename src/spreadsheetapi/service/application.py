@@ -7,12 +7,15 @@ app = FastAPI()
 
 app.include_router(v1.endpoints.router)
 
+
 @app.exception_handler(UnsupportedOperationForBackend)
 async def handle_unsupported_op_for_backend(
-            request: Request, exc: UnsupportedOperationForBackend
-        ):
+    request: Request, exc: UnsupportedOperationForBackend
+):
     return JSONResponse(
-            status_code=501,
-            content={"error": "The configured backend does not support the "
-                              "requested operation"}
-        )
+        status_code=501,
+        content={
+            "error": "The configured backend does not support the "
+            "requested operation"
+        },
+    )
