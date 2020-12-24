@@ -35,7 +35,7 @@ class SpreadsheetsEndpoint:
     ):
         """Create a new spreadsheet"""
 
-        id = uuid.uuid4()
+        id = str(uuid.uuid4())
         create_spreadsheet_cmd = command_factory.build(
             "CreateSpreadsheet", settings, id, new_spreadsheet.name
         )
@@ -50,14 +50,45 @@ class SpreadsheetEndpoint:
     uri = "/v1/spreadsheets/{spreadsheet_id}"
 
     @staticmethod
-    async def get(spreadsheet_id: str):
+    async def get(
+        spreadsheet_id: str,
+        settings: config.Settings = Depends(config.get_settings),
+        query_factory: QueryFactory = Depends(utils.get_query_factory),
+    ):
         """Return the information for the given spreadsheet"""
-        return {"id": "dfs", "name": "Spreadsheet 1"}, 501
+
+        get_spreadsheet_query = query_factory.build(
+            "RetrieveSpreadsheet", settings, spreadsheet_id
+        )
+        spreadsheet = get_spreadsheet_query.retrieve_data()
+
+        return spreadsheet
 
     @staticmethod
-    async def delete(spreadsheet_id: str):
-        return "", 501
+    async def delete(
+        spreadsheet_id: str,
+        settings: config.Settings = Depends(config.get_settings),
+        command_factory: CommandFactory = Depends(utils.get_command_factory),
+    ):
+        delete_spreadsheet_cmd = command_factory.build(
+            "DeleteSpreadsheet", settings, spreadsheet_id
+        )
+        delete_spreadsheet_cmd.execute()
+
+        return ""
 
     @staticmethod
-    async def put(spreadsheet_id: str):
-        return "", 501
+    async def put(
+        new_spreadsheet_data: models.UpdateSpreadsheet,
+        settings: config.Settings = Depends(config.get_settings),
+        command_factory: CommandFactory = Depends(utils.get_command_factory),
+    ):
+        """Create a new spreadsheet"""
+
+        id = str(uuid.uuid4())
+        update_spreadsheet_cmd = command_factory.build(
+            "UpdateSpreadsheet", settings, id, new_spreadsheet_data.name
+        )
+        update_spreadsheet_cmd.execute()
+
+        return {"id": id}
