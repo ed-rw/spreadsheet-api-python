@@ -19,10 +19,10 @@ class SpreadsheetsEndpoint:
     ):
         """Return available spreadsheets"""
 
-        get_spreadsheets_query = query_factory.build(
+        get_spreadsheets_query, handler = query_factory.build(
             "RetrieveSpreadsheets", settings
         )
-        spreadsheets = get_spreadsheets_query.retrieve_data()
+        spreadsheets = await handler.retrieve_data(get_spreadsheets_query)
 
         return spreadsheets
 
@@ -36,10 +36,10 @@ class SpreadsheetsEndpoint:
         """Create a new spreadsheet"""
 
         id = str(uuid.uuid4())
-        create_spreadsheet_cmd = command_factory.build(
+        create_spreadsheet_cmd, handler = command_factory.build(
             "CreateSpreadsheet", settings, id, new_spreadsheet.name
         )
-        create_spreadsheet_cmd.execute()
+        await handler.execute(create_spreadsheet_cmd)
 
         response.status_code = status.HTTP_201_CREATED
         return {"id": id}
@@ -57,10 +57,10 @@ class SpreadsheetEndpoint:
     ):
         """Return the information for the given spreadsheet"""
 
-        get_spreadsheet_query = query_factory.build(
+        get_spreadsheet_query, handler = query_factory.build(
             "RetrieveSpreadsheet", settings, spreadsheet_id
         )
-        spreadsheet = get_spreadsheet_query.retrieve_data()
+        spreadsheet = await handler.retrieve_data(get_spreadsheet_query)
 
         return spreadsheet
 
@@ -70,25 +70,26 @@ class SpreadsheetEndpoint:
         settings: config.Settings = Depends(config.get_settings),
         command_factory: CommandFactory = Depends(utils.get_command_factory),
     ):
-        delete_spreadsheet_cmd = command_factory.build(
+        delete_spreadsheet_cmd, handler = command_factory.build(
             "DeleteSpreadsheet", settings, spreadsheet_id
         )
-        delete_spreadsheet_cmd.execute()
+        await handler.execute(delete_spreadsheet_cmd)
 
         return ""
 
     @staticmethod
     async def put(
+        spreadsheet_id: str,
         new_spreadsheet_data: models.UpdateSpreadsheet,
         settings: config.Settings = Depends(config.get_settings),
         command_factory: CommandFactory = Depends(utils.get_command_factory),
     ):
-        """Create a new spreadsheet"""
-
-        id = str(uuid.uuid4())
-        update_spreadsheet_cmd = command_factory.build(
-            "UpdateSpreadsheet", settings, id, new_spreadsheet_data.name
+        update_spreadsheet_cmd, handler = command_factory.build(
+            "UpdateSpreadsheet",
+            settings,
+            spreadsheet_id,
+            dict(new_spreadsheet_data),
         )
-        update_spreadsheet_cmd.execute()
+        await handler.execute(update_spreadsheet_cmd)
 
-        return {"id": id}
+        return {"id": spreadsheet_id}

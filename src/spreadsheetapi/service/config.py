@@ -1,10 +1,17 @@
+import enum
 from functools import lru_cache
+from typing import Optional
+from pydantic import AnyUrl, BaseSettings
 
-from pydantic import BaseSettings
+
+class Backend(enum.Enum):
+    INMEMORY = "InMemory"
+    SQLITE = "SQLite"
 
 
 class Settings(BaseSettings):
-    backend: str = "InMemory"
+    backend: Backend = Backend.SQLITE
+    backend_db_url: Optional[str] = "sqlite:///.db/data.db"
 
 
 @lru_cache()

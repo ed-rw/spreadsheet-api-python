@@ -1,131 +1,70 @@
 from abc import ABC, abstractmethod
-
+from backends import commands, queries
 import config
 
 
-class Command(ABC):
-    pass
+class CommandHandler(ABC):
+    @abstractmethod
+    async def execute(self):
+        raise NotImplementedError()
 
 
-class Query(ABC):
-    pass
+class QueryHandler(ABC):
+    @abstractmethod
+    async def retrieve_data(self):
+        raise NotImplementedError()
 
 
 class UnsupportedOperationForBackend(NotImplementedError):
     pass
 
 
-class CreateSpreadsheet(Command, ABC):
-    def __init__(self, settings: config.Settings, id: str, name: str):
-        self.settings = settings
-        self.id = id
-        self.name = name
+class CommandFactory(ABC):
+    command_map = {
+        "CreateSpreadsheet": commands.CreateSpreadsheet,
+        "DeleteSpreadsheet": commands.DeleteSpreadsheet,
+        "UpdateSpreadsheet": commands.UpdateSpreadsheet,
+        "UpdateCell": commands.UpdateCell,
+        "DeleteCell": commands.DeleteCell,
+    }
 
-    @abstractmethod
-    def execute(self):
-        pass
-
-
-class DeleteSpreadsheet(Command, ABC):
-    def __init__(self, settings: config.Settings, id: str):
-        self.settings = settings
-        self.id = id
-
-    @abstractmethod
-    def execute(self):
-        pass
-
-
-class UpdateCell(Command, ABC):
-    def __init__(
-        self,
-        settings: config.Settings,
-        spreadsheet_id: str,
-        cell_id: str,
-        new_cell_data: dict,
-    ):
-        self.spreadsheet_id = spreadsheet_id
-        self.cell_id = cell_id
-        self.new_cell_data = new_cell_data
-
-    @abstractmethod
-    def execute(self):
-        pass
-
-
-class UpdateSpreadsheet(Command, ABC):
-    def __init__(
-        self, settings: config.Settings, id: str, new_spreadsheet_data: dict
-    ):
-        self.settings = settings
-        self.id = id
-        self.new_spreadsheet_data = new_spreadsheet_data
-
-    @abstractmethod
-    def execute(self):
-        pass
-
-
-class RetrieveCell(Query, ABC):
-    def __init__(
-        self, settings: config.Settings, spreadsheet_id: str, cell_id: str
-    ):
-        self.spreadsheet_id = spreadsheet_id
-        self.cell_id = cell_id
-
-    @abstractmethod
-    def retrieve_data(self):
-        pass
-
-
-class RetrieveCells(Query, ABC):
-    def __init__(self, settings: config.Settings, spreadsheet_id: str):
-        self.spreadsheet_id = spreadsheet_id
-
-    @abstractmethod
-    def retrieve_data(self):
-        pass
-
-
-class RetrieveSpreadsheet(Query, ABC):
-    def __init__(self, settings: config.Settings, spreadsheet_id: str):
-        elf.spreadsheet_id = spreadsheet_id
-
-    @abstractmethod
-    def retrieve_data(self):
-        pass
-
-
-class RetrieveSpreadsheets(Query, ABC):
     def __init__(self, settings: config.Settings):
         self.settings = settings
 
     @abstractmethod
-    def retrieve_data(self):
-        pass
-
-
-class CommandFactory(ABC):
-    command_map: dict
-
-    def __init__(self, settings):
-        self.settings = settings
+    def get_handler(self, command_name: str):
+        raise NotImplementedError()
 
     def build(self, command_name: str, *args, **kwargs):
         try:
-            return self.command_map[command_name](*args, **kwargs)
+            return (
+                self.command_map[command_name](*args, **kwargs),
+                self.get_handler(command_name),
+            )
         except KeyError:
             raise UnsupportedOperationForBackend()
 
 
 class QueryFactory(ABC):
-    query_map: dict
+    query_map = {
+        "RetrieveSpreadsheets": queries.RetrieveSpreadsheets,
+        "RetrieveSpreadsheet": queries.RetrieveSpreadsheet,
+        "RetrieveCell": queries.RetrieveCell,
+        "RetrieveCells": queries.RetrieveCells,
+    }
 
-    def __init__(self, settings):
+    def __init__(self, settings: config.Settings):
         self.settings = settings
+
+    @abstractmethod
+    def get_handler(self, query_name: str):
+        raise NotImplementedError()
 
     def build(self, query_name: str, *args, **kwargs):
         try:
-            return self.query_map[query_name](*args, **kwargs)
+            return (
+                self.query_map[query_name](*args, **kwargs),
+                self.get_handler(query_name),
+            )
         except KeyError:
             raise UnsupportedOperationForBackend()

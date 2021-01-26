@@ -12,6 +12,8 @@ mypy = "*"
 [packages]
 fastapi = "*"
 uvicorn = "*"
+databases = "*"
+aiosqlite = "*"
 
 [requires]
 python_version = "3.8"
