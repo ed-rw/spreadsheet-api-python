@@ -1,5 +1,5 @@
 import config
-from backends import abstracts, commands, queries
+from backends import abstracts, commands, exc, queries
 
 spreadsheets = {}  # Map spreadsheet id to dict of metadata
 cells = {}  # Map spreadsheet id to dict, this maps cell ids to
@@ -8,12 +8,15 @@ cells = {}  # Map spreadsheet id to dict, this maps cell ids to
 
 class RetrieveSpreadsheetsHandler(abstracts.QueryHandler):
     async def retrieve_data(self, query: queries.RetrieveSpreadsheets):
-        return spreadsheets
+        return [{**data, "id": id} for id, data in spreadsheets.items()]
 
 
 class RetrieveSpreadsheetHandler(abstracts.QueryHandler):
     async def retrieve_data(self, query: queries.RetrieveSpreadsheet):
-        return spreadsheets[query.spreadsheet_id]
+        if query.id not in spreadsheets:
+            raise exc.UnknownSpreadsheetId(query.id)
+
+        return {**spreadsheets[query.id], "id": query.id}
 
 
 class CreateSpreadsheetHandler(abstracts.CommandHandler):
@@ -30,26 +33,49 @@ class DeleteSpreadsheetHandler(abstracts.CommandHandler):
 
 class UpdateSpreadsheetHandler(abstracts.CommandHandler):
     async def execute(self, cmd: commands.UpdateSpreadsheet):
+        if cmd.id not in spreadsheets:
+            raise exc.UnknownSpreadsheetId(cmd.id)
+
         spreadsheets[cmd.id] = cmd.new_spreadsheet_data
 
 
 class RetrieveCellsHandler(abstracts.QueryHandler):
     async def retrieve_data(self, query: queries.RetrieveCells):
-        return cells[query.spreadsheet_id]
+        if query.spreadsheet_id not in spreadsheets:
+            raise exc.UnknownSpreadsheetId(query.spreadsheet_id)
+
+        return [
+            {"name": name, "data": data}
+            for name, data in cells[query.spreadsheet_id].items()
+        ]
 
 
 class RetrieveCellHandler(abstracts.QueryHandler):
     async def retrieve_data(self, query: queries.RetrieveCell):
-        return cells[query.spreadsheet_id].get(query.cell_name)
+        if query.spreadsheet_id not in spreadsheets:
+            raise exc.UnknownSpreadsheetId(query.spreadsheet_id)
+
+        data = cells[query.spreadsheet_id].get(query.cell_name)
+
+        if data is None:
+            return None
+        else:
+            return {"name": query.cell_name, "data": data}
 
 
 class UpdateCellHandler(abstracts.CommandHandler):
     async def execute(self, cmd: commands.UpdateCell):
+        if cmd.spreadsheet_id not in spreadsheets:
+            raise exc.UnknownSpreadsheetId(cmd.spreadsheet_id)
+
         cells[cmd.spreadsheet_id][cmd.cell_name] = cmd.new_cell_data
 
 
 class DeleteCellHandler(abstracts.CommandHandler):
     async def execute(self, cmd: commands.DeleteCell):
+        if cmd.spreadsheet_id not in spreadsheets:
+            raise exc.UnknownSpreadsheetId(cmd.spreadsheet_id)
+
         del cells[cmd.spreadsheet_id][cmd.cell_name]
 
 

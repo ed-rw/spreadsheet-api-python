@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import v1
-from backends.abstracts import UnsupportedOperationForBackend
+from backends.exc import UnsupportedOperationForBackend
 
 app = FastAPI()
 

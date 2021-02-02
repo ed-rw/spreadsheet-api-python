@@ -15,10 +15,6 @@ class QueryHandler(ABC):
         raise NotImplementedError()
 
 
-class UnsupportedOperationForBackend(NotImplementedError):
-    pass
-
-
 class CommandFactory(ABC):
     command_map = {
         "CreateSpreadsheet": commands.CreateSpreadsheet,

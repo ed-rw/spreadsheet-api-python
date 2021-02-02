@@ -5,7 +5,7 @@ import sqlalchemy
 from sqlalchemy.orm import Query
 from sqlalchemy.ext.declarative import declarative_base
 from typing import List, Union, Optional
-from backends import abstracts, commands, queries
+from backends import abstracts, commands, exc, queries
 
 metadata = sqlalchemy.MetaData()
 
@@ -107,6 +107,15 @@ class SqliteQueryHandler(abstracts.QueryHandler):
         self.db = db
 
 
+class NonExistantSpreadsheetMixin:
+    async def _raise_for_non_existant_spreadsheet(self, settings, id):
+        # This will raise an exception if the spreadsheet doesn't exist,
+        # otherwise we have no need for the response.
+        await RetrieveSpreadsheetHandler(self.db).retrieve_data(
+            queries.RetrieveSpreadsheet(settings=settings, id=id)
+        )
+
+
 # Queries and Commands
 class RetrieveSpreadsheetsHandler(SqliteQueryHandler):
     async def retrieve_data(self, query: queries.RetrieveSpreadsheets):
@@ -122,7 +131,10 @@ class RetrieveSpreadsheetHandler(SqliteQueryHandler):
                 [spreadsheets.c.id, spreadsheets.c.name]
             ).where(spreadsheets.c.id == query.id)
         )
-        return results[0]
+        if len(results) == 0:
+            raise exc.UnknownSpreadsheetId(query.id)
+        else:
+            return results[0]
 
 
 class CreateSpreadsheetHandler(SqliteCommandHandler):
@@ -141,8 +153,12 @@ class DeleteSpreadsheetHandler(SqliteCommandHandler):
         await self.db.execute(sql)
 
 
-class UpdateSpreadsheetHandler(SqliteCommandHandler):
+class UpdateSpreadsheetHandler(
+    SqliteCommandHandler, NonExistantSpreadsheetMixin
+):
     async def execute(self, cmd: commands.UpdateSpreadsheet):
+        await self._raise_for_non_existant_spreadsheet(cmd.settings, cmd.id)
+
         sql = (
             spreadsheets.update()
             .where(spreadsheets.c.id == cmd.id)
@@ -151,17 +167,37 @@ class UpdateSpreadsheetHandler(SqliteCommandHandler):
         await self.db.execute(sql, cmd.new_spreadsheet_data)
 
 
-class RetrieveCellsHandler(SqliteQueryHandler):
-    async def retrieve_data(self, query: queries.RetrieveCells):
-        return await self.db.fetch(
+class RetrieveCellsHandler(SqliteQueryHandler, NonExistantSpreadsheetMixin):
+    async def retrieve_data(self, query: queries.RetrieveCells) -> List[dict]:
+
+        await self._raise_for_non_existant_spreadsheet(
+            query.settings, query.spreadsheet_id
+        )
+
+        results = await self.db.fetch(
             sqlalchemy.sql.select([cells.c.name, cells.c.data]).where(
                 cells.c.spreadsheet_id == query.spreadsheet_id
             )
         )
 
+        # Deserialize json in cell "data" column
+        def transform_row(row) -> dict:
+            row = {**row}
+            row["data"] = json.loads(row["data"])
+            return row
 
-class RetrieveCellHandler(SqliteQueryHandler):
-    async def retrieve_data(self, query: queries.RetrieveCell):
+        return [transform_row(row) for row in results]
+
+
+class RetrieveCellHandler(SqliteQueryHandler, NonExistantSpreadsheetMixin):
+    async def retrieve_data(
+        self, query: queries.RetrieveCell
+    ) -> Optional[dict]:
+
+        await self._raise_for_non_existant_spreadsheet(
+            query.settings, query.spreadsheet_id
+        )
+
         sql = (
             sqlalchemy.sql.select([cells.c.name, cells.c.data])
             .where(cells.c.spreadsheet_id == query.spreadsheet_id)
@@ -171,11 +207,18 @@ class RetrieveCellHandler(SqliteQueryHandler):
         if len(results) == 0:
             return None
         else:
-            return results[0]
+            row = {**results[0]}
+            row["data"] = json.loads(row["data"])
+            return row
 
 
-class UpdateCellHandler(SqliteCommandHandler):
+class UpdateCellHandler(SqliteCommandHandler, NonExistantSpreadsheetMixin):
     async def execute(self, cmd: commands.UpdateCell):
+
+        await self._raise_for_non_existant_spreadsheet(
+            cmd.settings, cmd.spreadsheet_id
+        )
+
         # TODO: switch to upsert
         sql = (
             sqlalchemy.sql.select([cells.c.id])
@@ -208,8 +251,12 @@ class UpdateCellHandler(SqliteCommandHandler):
         await self.db.execute(sql, {"data": cmd.new_cell_data.json()})
 
 
-class DeleteCellHandler(SqliteCommandHandler):
+class DeleteCellHandler(SqliteCommandHandler, NonExistantSpreadsheetMixin):
     async def execute(self, cmd: commands.DeleteCell):
+        await self._raise_for_non_existant_spreadsheet(
+            cmd.settings, cmd.spreadsheet_id
+        )
+
         sql = (
             cells.delete()
             .where(cells.c.spreadsheet_id == cmd.spreadsheet_id)

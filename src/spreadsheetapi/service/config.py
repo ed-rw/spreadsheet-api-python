@@ -10,7 +10,7 @@ class Backend(enum.Enum):
 
 
 class Settings(BaseSettings):
-    backend: Backend = Backend.SQLITE
+    backend: Backend = Backend.INMEMORY
     backend_db_url: Optional[str] = "sqlite:///.db/data.db"
 
 

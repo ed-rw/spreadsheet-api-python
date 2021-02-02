@@ -1,4 +1,7 @@
 from fastapi import Depends
+from fastapi.responses import JSONResponse
+
+from backends import exc
 from backends.abstracts import QueryFactory, CommandFactory
 import config
 from v1 import models
@@ -20,7 +23,11 @@ class CellsEndpoint:
         get_cells_query, handler = query_factory.build(
             "RetrieveCells", settings, spreadsheet_id
         )
-        cells = await handler.retrieve_data(get_cells_query)
+
+        try:
+            cells = await handler.retrieve_data(get_cells_query)
+        except exc.UnknownSpreadsheetId as e:
+            return JSONResponse(status_code=404, content={"error": str(e)})
 
         return cells
 
@@ -41,7 +48,11 @@ class CellEndpoint:
         get_cell_query, handler = query_factory.build(
             "RetrieveCell", settings, spreadsheet_id, cell_name
         )
-        cell = await handler.retrieve_data(get_cell_query)
+
+        try:
+            cell = await handler.retrieve_data(get_cell_query)
+        except exc.UnknownSpreadsheetId as e:
+            return JSONResponse(status_code=404, content={"error": str(e)})
 
         return cell
 
@@ -57,7 +68,11 @@ class CellEndpoint:
         update_cell_cmd, handler = command_factory.build(
             "UpdateCell", settings, spreadsheet_id, cell_name, cell_data
         )
-        await handler.execute(update_cell_cmd)
+
+        try:
+            await handler.execute(update_cell_cmd)
+        except exc.UnknownSpreadsheetId as e:
+            return JSONResponse(status_code=404, content={"error": str(e)})
 
         return ""
 
@@ -71,6 +86,10 @@ class CellEndpoint:
         delete_cell_cmd, handler = command_factory.build(
             "DeleteCell", settings, spreadsheet_id, cell_name
         )
-        await handler.execute(delete_cell_cmd)
+
+        try:
+            await handler.execute(delete_cell_cmd)
+        except exc.UnknownSpreadsheetId as e:
+            return JSONResponse(status_code=404, content={"error": str(e)})
 
         return ""

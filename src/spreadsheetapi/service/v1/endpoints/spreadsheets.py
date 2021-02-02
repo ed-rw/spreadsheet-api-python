@@ -1,7 +1,9 @@
 import uuid
 
 from fastapi import Depends, Response, status
+from fastapi.responses import JSONResponse
 
+from backends import exc
 from backends.abstracts import QueryFactory, CommandFactory
 import config
 from v1 import models
@@ -60,7 +62,11 @@ class SpreadsheetEndpoint:
         get_spreadsheet_query, handler = query_factory.build(
             "RetrieveSpreadsheet", settings, spreadsheet_id
         )
-        spreadsheet = await handler.retrieve_data(get_spreadsheet_query)
+
+        try:
+            spreadsheet = await handler.retrieve_data(get_spreadsheet_query)
+        except exc.UnknownSpreadsheetId as e:
+            return JSONResponse(status_code=404, content={"error": str(e)})
 
         return spreadsheet
 
@@ -90,6 +96,10 @@ class SpreadsheetEndpoint:
             spreadsheet_id,
             dict(new_spreadsheet_data),
         )
-        await handler.execute(update_spreadsheet_cmd)
+
+        try:
+            await handler.execute(update_spreadsheet_cmd)
+        except exc.UnknownSpreadsheetId as e:
+            return JSONResponse(status_code=404, content={"error": str(e)})
 
         return {"id": spreadsheet_id}
