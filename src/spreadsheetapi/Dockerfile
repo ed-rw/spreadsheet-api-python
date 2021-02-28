@@ -1,8 +1,9 @@
 FROM python:3.8-alpine
 
-COPY service/ /opt/spreadsheetapi/service
-COPY Pipfile /opt/spreadsheetapi/Pipfile
-COPY Pipfile.lock /opt/spreadsheetapi/Pipfile.lock
+# This Dockerfile is intended to be built from the root of the repository
+COPY src/spreadsheetapi/service/ /opt/spreadsheetapi/service
+COPY src/spreadsheetapi/Pipfile /opt/spreadsheetapi/Pipfile
+COPY src/spreadsheetapi/Pipfile.lock /opt/spreadsheetapi/Pipfile.lock
 
 RUN pip install pipenv && \
     cd /opt/spreadsheetapi && \
