@@ -57,6 +57,7 @@ jobs:
               # NOTE: Same issue noted above
               run: |
                 cd src/spreadsheetapi/service
+                mkdir .db
                 pipenv run uvicorn application:app --host 0.0.0.0 --port 8000 &> /dev/null &
               env:
                   BACKEND: SQLite
