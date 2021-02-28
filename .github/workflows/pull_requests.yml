@@ -1,0 +1,43 @@
+name: Pull-Request-Workflow
+
+on:
+    pull_request:
+        branches:
+            - master
+
+jobs:
+    test-inmemory:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+            # Build and run service in container using inmem backend, capturing ip and port
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.8
+            - name: Install Dependencies
+              run: |
+                python -m pip install --upgrade pip
+                pip install pipenv
+                cd src/spreadsheetapi
+                pipenv sync
+            - name: Run the spreadsheet API
+              run: |
+                cd src/spreadsheetapi/service
+                pipenv run gunicorn application:app
+              env:
+                  BACKEND: InMemory
+            - uses: ed-rw/spreadsheet-api-tests@v0.0.1
+              with:
+                  service-base-url: http://172.17.0.1:8000
+    # test-sqlite:
+    #     runs-on: ubuntu-latest
+    #
+    #     steps:
+    #         - uses: actions/checkout@v2
+    #         - run: docker
+    #         # Build and run service in container using sqlite backend, capturing ip and port
+    #         - uses: ed-rw/spreadsheet-api-tests@v0.0.1
+    #           with:
+    #               service-base-url: ??
