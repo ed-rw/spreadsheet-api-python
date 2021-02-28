@@ -25,7 +25,7 @@ jobs:
             - name: Run the spreadsheet API
               run: |
                 cd src/spreadsheetapi/service
-                pipenv run gunicorn application:app
+                pipenv run uvicorn application:app
               env:
                   BACKEND: InMemory
             - uses: ed-rw/spreadsheet-api-tests@v0.0.1
