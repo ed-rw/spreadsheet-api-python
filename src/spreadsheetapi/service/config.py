@@ -9,6 +9,9 @@ class Backend(enum.Enum):
     SQLITE = "SQLite"
 
 
+# NOTE: Settings here will be read from environment variables if they are
+# present.
+# https://fastapi.tiangolo.com/pt/advanced/settings/#create-the-settings-object
 class Settings(BaseSettings):
     backend: Backend = Backend.INMEMORY
     backend_db_url: Optional[str] = "sqlite:///.db/data.db"
