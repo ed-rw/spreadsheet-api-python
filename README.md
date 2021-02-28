@@ -10,12 +10,15 @@ and components in order to allow the use of various languages and frameworks.
 This also mimics a microservices system architecture, and will allow
 experimentation with different testing and deployment strategies.
 
-While this is the first, I hope to include related components:
+While this is the first, I hope to include the following components:
 - spreadsheet-frontend-svelte
 - spreadsheet-frontend-vue
 - spreadsheet-frontend-elm
 - spreadsheet-api-go
-- spreadsheet-api-erlang
+- spreadsheet-api-erlang/elixir
+
+## Related Repos
+- [spreadsheet-api-tests](https://github.com/ed-rw/spreadsheet-api-tests)
 
 ## Project Setup
 
@@ -43,6 +46,22 @@ documentation for the API. This is available at `http://127.0.0.1:8000/docs`.
 I have not dug deeply into the information presented in this interface, so it
 may be incorrect or incomplete at this time.
 
+## CI/CD and "Production" Setup
+
+This repository uses GitHub actions to automatically test pull requests and
+commits made to the master branch. The main test suite is located in the
+external repo
+[spreadsheet-api-tests](https://github.com/ed-rw/spreadsheet-api-tests).
+
+Commits to the master branch are continuously deployed to DigitalOcean's
+App Platform. Commits can be excluded from deployment by starting the commit
+message with `ND:` (Non-deploy commit).
+
+This service uses Terraform to provision and configure the DigitalOcean App
+Platform on which it is run. App Platform handles building and deploying the
+Docker container that the service runs within. Deploys are initiated using the
+DigitalOcean cli tool in the [master pipeline](.github/workflows/master.yml).
+
 ## Development Considerations
 ### Endpoints
 Missing Flask's [class based views](https://flask.palletsprojects.com/en/1.1.x/views/#method-based-dispatching)
@@ -52,8 +71,8 @@ Registration is done automatically in the endpoints package \_\_init__.py using
 a little bit of introspection/reflection..
 
 ## TODO
-- Automated tests (though could be interesting to split into own project?
-  allow running the same suite against different api implementations)
+- restrict CI pipelines to only run when code changes
+- remove service directory and shift contents up, will make imports clearer
 - Dockerize
 - config updates - from env, dependent configuration item (eg setting sqlite
    backend requires db url setting)
