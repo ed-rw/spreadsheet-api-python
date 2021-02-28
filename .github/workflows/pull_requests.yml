@@ -22,14 +22,14 @@ jobs:
                 cd src/spreadsheetapi
                 pipenv sync
             - name: Run the spreadsheet API
-              # Using 0.0.0.0 as the host is not ideal here (security risk,
-              # question - what firewall rules does github have setup for these
-              # VMs?), but in order for the spreadsheet-api-tests container to
-              # have access to this service this is the simplest solution for
-              # now. If github actions supports setting network mode = host for
-              # the action or if the service here is updated to run as a
-              # container on the default bridge network this would be more
-              # secure.
+              # NOTE: Using 0.0.0.0 as the host is not ideal here (security
+              # risk, question - what firewall rules does github have setup for
+              # these VMs?), but in order for the spreadsheet-api-tests
+              # container to have access to this service this is the simplest
+              # solution for now. If github actions supports setting network
+              # mode = host for the action or if the service here is updated to
+              # run as a container on the default bridge network this would be
+              # more secure.
               run: |
                 cd src/spreadsheetapi/service
                 pipenv run uvicorn application:app --host 0.0.0.0 --port 8000 &> /dev/null &
@@ -38,13 +38,28 @@ jobs:
             - uses: ed-rw/spreadsheet-api-tests@master
               with:
                   service-base-url: http://172.17.0.1:8000
-    # test-sqlite:
-    #     runs-on: ubuntu-latest
-    #
-    #     steps:
-    #         - uses: actions/checkout@v2
-    #         - run: docker
-    #         # Build and run service in container using sqlite backend, capturing ip and port
-    #         - uses: ed-rw/spreadsheet-api-tests@v0.0.1
-    #           with:
-    #               service-base-url: ??
+    test-sqlite:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.8
+            - name: Install Dependencies
+              run: |
+                python -m pip install --upgrade pip
+                pip install pipenv
+                cd src/spreadsheetapi
+                pipenv sync
+            - name: Run the spreadsheet API
+              # NOTE: Same issue noted above
+              run: |
+                cd src/spreadsheetapi/service
+                pipenv run uvicorn application:app --host 0.0.0.0 --port 8000 &> /dev/null &
+              env:
+                  BACKEND: SQLite
+            - uses: ed-rw/spreadsheet-api-tests@master
+              with:
+                  service-base-url: http://172.17.0.1:8000
