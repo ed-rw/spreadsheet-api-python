@@ -27,8 +27,11 @@ class CreateSpreadsheetHandler(abstracts.CommandHandler):
 
 class DeleteSpreadsheetHandler(abstracts.CommandHandler):
     async def execute(self, cmd: commands.DeleteSpreadsheet):
-        del spreadsheets[cmd.id]
-        del cells[cmd.id]
+        if cmd.id in spreadsheets:
+            del spreadsheets[cmd.id]
+
+        if cmd.id in cells:
+            del cells[cmd.id]
 
 
 class UpdateSpreadsheetHandler(abstracts.CommandHandler):
@@ -76,7 +79,8 @@ class DeleteCellHandler(abstracts.CommandHandler):
         if cmd.spreadsheet_id not in spreadsheets:
             raise exc.UnknownSpreadsheetId(cmd.spreadsheet_id)
 
-        del cells[cmd.spreadsheet_id][cmd.cell_name]
+        if cmd.cell_name in cells[cmd.spreadsheet_id]:
+            del cells[cmd.spreadsheet_id][cmd.cell_name]
 
 
 class InMemoryQueryFactory(abstracts.QueryFactory):
