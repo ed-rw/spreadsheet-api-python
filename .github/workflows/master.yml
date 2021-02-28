@@ -79,6 +79,9 @@ jobs:
               with:
                   terraform_version: 0.14.7
                   cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+                  # The wrapper hides terraform output, making it tricky to
+                  # get th value of the app_platform_id
+                  terraform_wrapper: false
             - name: Install doctl
               uses: digitalocean/action-doctl@v2
               with:
