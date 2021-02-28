@@ -83,7 +83,6 @@ jobs:
               run: |
                 cd terraform
                 terraform init
-                terraform fmt -check
                 terraform validate
             - name: TF apply
               run: cd terraform && terraform apply -auto-approve

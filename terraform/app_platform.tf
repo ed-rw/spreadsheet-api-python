@@ -4,8 +4,8 @@ resource "digitalocean_app" "spreadsheet_api_python" {
     region = "nyc"
 
     service {
-      name           = "spreadsheetapi"
-      instance_count = 1
+      name               = "spreadsheetapi"
+      instance_count     = 1
       instance_size_slug = "basic-xxs"
 
       github {
@@ -15,7 +15,7 @@ resource "digitalocean_app" "spreadsheet_api_python" {
       }
 
       dockerfile_path = "src/spreadsheetapi/Dockerfile"
-      source_dir = "src/spreadsheetapi"
+      source_dir      = "src/spreadsheetapi"
 
       env {
         key   = "BACKEND"
