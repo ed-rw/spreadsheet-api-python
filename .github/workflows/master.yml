@@ -86,10 +86,10 @@ jobs:
                 terraform fmt -check
                 terraform validate
             - name: TF apply
-              run: terraform apply -auto-approve
+              run: cd terraform && terraform apply -auto-approve
             - name: Output App Platorm Id
               id: get_app_platform_id
-              run: echo "::set-output name=app_platform_id::$(terraform output app_platform_id)"
+              run: cd terraform && echo "::set-output name=app_platform_id::$(terraform output app_platform_id)"
     deploy-to-app-platform:
         needs: update-app-platform
 
