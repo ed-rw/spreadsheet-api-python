@@ -28,7 +28,7 @@ jobs:
                 pipenv run uvicorn application:app &> /dev/null &
               env:
                   BACKEND: InMemory
-            - uses: ed-rw/spreadsheet-api-tests@v0.0.1
+            - uses: ed-rw/spreadsheet-api-tests@v0.0.2
               with:
                   service-base-url: http://172.17.0.1:8000
     # test-sqlite:
