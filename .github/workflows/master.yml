@@ -1,7 +1,7 @@
-name: Pull-Request-Pipeline
+name: Master-Pipeline
 
 on:
-    pull_request:
+    push:
         branches:
             - master
 
@@ -64,3 +64,25 @@ jobs:
             - uses: ed-rw/spreadsheet-api-tests@master
               with:
                   service-base-url: http://172.17.0.1:8000
+    # deploy:
+    #     needs: [test-inmemory, test-sqlite]
+    #
+    #     runs-on:
+    #         ubuntu-latest
+    #
+    #     steps:
+    #         - uses: actions/checkout@v2
+    #         - name: Set up Terraform
+    #           uses: hashicorp/setup-terraform@v1
+    #           with:
+    #             cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    #         - name: TF init and format check and validate
+    #           run: |
+    #             cd terraform
+    #             terraform init
+    #             terraform fmt -check
+    #             terraform validate
+    #         - name: TF plan
+    #           run: terraform plan -out=plan
+    #         - name: TF apply
+    #           run: terraform apply -auto-approve
