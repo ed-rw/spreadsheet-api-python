@@ -1,11 +1,12 @@
 resource "digitalocean_app" "spreadsheet_api_python" {
   spec {
     name   = "spreadsheet-api-python"
-    region = "nyc1"
+    region = "nyc"
 
     service {
       name           = "spreadsheetapi"
       instance_count = 1
+      instance_size_slug = "basic-xxs"
 
       github {
         branch         = "master"
@@ -14,6 +15,7 @@ resource "digitalocean_app" "spreadsheet_api_python" {
       }
 
       dockerfile_path = "src/spreadsheetapi/Dockerfile"
+      source_dir = "src/spreadsheetapi"
 
       env {
         key   = "BACKEND"

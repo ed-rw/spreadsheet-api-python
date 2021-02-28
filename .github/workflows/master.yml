@@ -70,7 +70,7 @@ jobs:
         runs-on: ubuntu-latest
 
         outputs:
-            app_platform_id: $${steps.get_app_platform_id.outputs.app_platform_id}
+            app_platform_id: ${{steps.get_app_platform_id.outputs.app_platform_id}}
 
         steps:
             - uses: actions/checkout@v2
