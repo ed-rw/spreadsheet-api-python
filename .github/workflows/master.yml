@@ -64,13 +64,13 @@ jobs:
             - uses: ed-rw/spreadsheet-api-tests@master
               with:
                   service-base-url: http://172.17.0.1:8000
-    update-app-platform:
+    deploy-to-app-platform:
+        # Skip Non-deploy commits
+        # if: "! contains(github.event.head_commit.message, 'ND:')"
+
         needs: [test-inmemory, test-sqlite]
 
         runs-on: ubuntu-latest
-
-        outputs:
-            app_platform_id: ${{steps.get_app_platform_id.outputs.app_platform_id}}
 
         steps:
             - uses: actions/checkout@v2
@@ -79,25 +79,16 @@ jobs:
               with:
                   terraform_version: 0.14.7
                   cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-            - name: TF init, format check and validate
-              run: |
-                cd terraform
-                terraform init
-                terraform validate
-            - name: TF apply
-              run: cd terraform && terraform apply -auto-approve
-            - name: Output App Platorm Id
-              id: get_app_platform_id
-              run: cd terraform && echo "::set-output name=app_platform_id::$(terraform output app_platform_id)"
-    deploy-to-app-platform:
-        needs: update-app-platform
-
-        runs-on: ubuntu-latest
-
-        steps:
             - name: Install doctl
               uses: digitalocean/action-doctl@v2
               with:
                   token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+            - name: Output App Platorm Id
+              id: get_app_platform_id
+              run: |
+                cd terraform
+                terraform init
+                terraform validate
+                echo "::set-output name=app_platform_id::$(terraform output app_platform_id)"
             - name: Initiate deployment
-              run: doctl app create-deployment ${{needs.update-app-platform.outputs.app_platform_id}}
+              run: doctl app create-deployment ${{steps.get_app_platform_id.outputs.app_platform_id}}
