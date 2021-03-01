@@ -46,6 +46,16 @@ documentation for the API. This is available at `http://127.0.0.1:8000/docs`.
 I have not dug deeply into the information presented in this interface, so it
 may be incorrect or incomplete at this time.
 
+## Commit Message Prefixes
+
+Commit messages are prefixed with:
+
+- `F:` for commits that contain new feature work
+- `BF:` for commits that contain bug fixes
+- `I:` for general code improvements
+- `ND:` for non-deploy commits - these may be documentation updates, changes to
+CI pipelines, or changes to terraform code
+
 ## CI/CD and "Production" Setup
 
 This repository uses GitHub actions to automatically test pull requests and
@@ -71,10 +81,9 @@ Registration is done automatically in the endpoints package \_\_init__.py using
 a little bit of introspection/reflection..
 
 ## TODO
-- restrict CI pipelines to only run when code changes
+- use docker container for service in tests
 - remove service directory and shift contents up, will make imports clearer
-- Dockerize
-- config updates - from env, dependent configuration item (eg setting sqlite
+- config updates - dependent configuration items (eg setting sqlite
    backend requires db url setting)
 - Pre-commit hook for black and mypy
 - Redis backend

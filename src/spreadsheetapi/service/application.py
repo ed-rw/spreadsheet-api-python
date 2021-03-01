@@ -7,6 +7,10 @@ app = FastAPI()
 
 app.include_router(v1.endpoints.router)
 
+# Register status endpoint
+@app.get("/status")
+async def status():
+    return ""
 
 @app.exception_handler(UnsupportedOperationForBackend)
 async def handle_unsupported_op_for_backend(
