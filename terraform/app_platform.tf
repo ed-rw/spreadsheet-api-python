@@ -22,6 +22,15 @@ resource "digitalocean_app" "spreadsheet_api_python" {
         value = "InMemory"
         type  = "GENERAL"
       }
+
+      health_check {
+        http_path             = "/status"
+        initial_delay_seconds = 4
+        period_seconds        = 5
+        timeout_seconds       = 3
+        success_threshold     = 1
+        failure_threshold     = 5
+      }
     }
   }
 }
