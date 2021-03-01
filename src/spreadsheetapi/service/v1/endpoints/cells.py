@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Path
 from fastapi.responses import JSONResponse
 
 from backends import exc
@@ -59,8 +59,8 @@ class CellEndpoint:
     @staticmethod
     async def put(
         spreadsheet_id: str,
-        cell_name: str,
         cell_data: models.UpdateCell,
+        cell_name: str = Path(..., regex="^[A-Z]+[1-9][0-9]*$"),
         settings: config.Settings = Depends(config.get_settings),
         command_factory: CommandFactory = Depends(utils.get_command_factory),
     ):
