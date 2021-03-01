@@ -12,6 +12,7 @@ app.include_router(v1.endpoints.router)
 async def status():
     return ""
 
+
 @app.exception_handler(UnsupportedOperationForBackend)
 async def handle_unsupported_op_for_backend(
     request: Request, exc: UnsupportedOperationForBackend

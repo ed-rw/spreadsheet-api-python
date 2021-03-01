@@ -1,2 +1,4 @@
 *.db*
 *.terraform*
+
+*__pycache__*

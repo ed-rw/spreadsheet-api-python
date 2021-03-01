@@ -1,5 +1,5 @@
 import config
-from backends import abstracts, commands, exc, queries
+from backends import abstracts, commands, exc, queries, transforms
 
 spreadsheets = {}  # Map spreadsheet id to dict of metadata
 cells = {}  # Map spreadsheet id to dict, this maps cell ids to
@@ -17,6 +17,18 @@ class RetrieveSpreadsheetHandler(abstracts.QueryHandler):
             raise exc.UnknownSpreadsheetId(query.id)
 
         return {**spreadsheets[query.id], "id": query.id}
+
+
+class RetrieveSpreadsheetViewHandler(abstracts.QueryHandler):
+    async def retrieve_data(self, query: queries.RetrieveSpreadsheetView):
+        cells = await RetrieveCellsHandler().retrieve_data(
+            queries.RetrieveCells(
+                settings=query.settings, spreadsheet_id=query.id
+            )
+        )
+
+        cells_transform = transforms.CellsToView(cells)
+        return cells_transform.view()
 
 
 class CreateSpreadsheetHandler(abstracts.CommandHandler):
@@ -71,7 +83,7 @@ class UpdateCellHandler(abstracts.CommandHandler):
         if cmd.spreadsheet_id not in spreadsheets:
             raise exc.UnknownSpreadsheetId(cmd.spreadsheet_id)
 
-        cells[cmd.spreadsheet_id][cmd.cell_name] = cmd.new_cell_data
+        cells[cmd.spreadsheet_id][cmd.cell_name] = dict(cmd.new_cell_data)
 
 
 class DeleteCellHandler(abstracts.CommandHandler):
@@ -87,6 +99,7 @@ class InMemoryQueryFactory(abstracts.QueryFactory):
     handler_map = {
         "RetrieveSpreadsheets": RetrieveSpreadsheetsHandler,
         "RetrieveSpreadsheet": RetrieveSpreadsheetHandler,
+        "RetrieveSpreadsheetView": RetrieveSpreadsheetViewHandler,
         "RetrieveCell": RetrieveCellHandler,
         "RetrieveCells": RetrieveCellsHandler,
     }

@@ -24,3 +24,9 @@ class RetrieveSpreadsheet:
 @dataclass
 class RetrieveSpreadsheets:
     settings: config.Settings
+
+
+@dataclass
+class RetrieveSpreadsheetView:
+    settings: config.Settings
+    id: str

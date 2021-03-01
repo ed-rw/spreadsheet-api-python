@@ -6,7 +6,21 @@ on:
             - master
 
 jobs:
+    test-doctest:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v2
+            - name: Set up Python 3.8
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.8
+            - name: Run the doc tests
+              run: |
+                cd src/spreadsheetapi
+                python -m doctest service/backends/transforms.py
     test-inmemory:
+        needs: test-doctest
         runs-on: ubuntu-latest
 
         steps:
@@ -39,6 +53,7 @@ jobs:
               with:
                   service-base-url: http://172.17.0.1:8000
     test-sqlite:
+        needs: test-doctest
         runs-on: ubuntu-latest
 
         steps:

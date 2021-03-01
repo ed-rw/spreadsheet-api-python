@@ -45,6 +45,7 @@ class QueryFactory(ABC):
     query_map = {
         "RetrieveSpreadsheets": queries.RetrieveSpreadsheets,
         "RetrieveSpreadsheet": queries.RetrieveSpreadsheet,
+        "RetrieveSpreadsheetView": queries.RetrieveSpreadsheetView,
         "RetrieveCell": queries.RetrieveCell,
         "RetrieveCells": queries.RetrieveCells,
     }

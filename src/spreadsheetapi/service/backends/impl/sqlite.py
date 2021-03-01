@@ -5,7 +5,7 @@ import sqlalchemy
 from sqlalchemy.orm import Query
 from sqlalchemy.ext.declarative import declarative_base
 from typing import List, Union, Optional
-from backends import abstracts, commands, exc, queries
+from backends import abstracts, commands, exc, queries, transforms
 
 metadata = sqlalchemy.MetaData()
 
@@ -80,7 +80,8 @@ class DBConnection:
         query: Union[str, Query],
         values: Optional[Union[dict, List[dict]]] = None,
     ) -> None:
-        """Execute a SQL query, this does not return any results from the database, generally used for DML
+        """Execute a SQL query, this does not return any results from the
+        database, generally used for DML
         """
         if not self.connected:
             await self.database.connect()
@@ -135,6 +136,18 @@ class RetrieveSpreadsheetHandler(SqliteQueryHandler):
             raise exc.UnknownSpreadsheetId(query.id)
         else:
             return results[0]
+
+
+class RetrieveSpreadsheetViewHandler(SqliteQueryHandler):
+    async def retrieve_data(self, query: queries.RetrieveSpreadsheetView):
+        cells = await RetrieveCellsHandler(self.db).retrieve_data(
+            queries.RetrieveCells(
+                settings=query.settings, spreadsheet_id=query.id
+            )
+        )
+
+        cells_transform = transforms.CellsToView(cells)
+        return cells_transform.view()
 
 
 class CreateSpreadsheetHandler(SqliteCommandHandler):
@@ -270,6 +283,7 @@ class SQLiteQueryFactory(abstracts.QueryFactory):
     handler_map = {
         "RetrieveSpreadsheets": RetrieveSpreadsheetsHandler,
         "RetrieveSpreadsheet": RetrieveSpreadsheetHandler,
+        "RetrieveSpreadsheetView": RetrieveSpreadsheetViewHandler,
         "RetrieveCell": RetrieveCellHandler,
         "RetrieveCells": RetrieveCellsHandler,
     }
